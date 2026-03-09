@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单词速记卡</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 50px;
+        }
+
+        .word-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .word-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+        }
+
+        .word {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        .explanation {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .audio-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .audio-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .audio-btn i {
+            font-size: 18px;
+        }
+
+        /* 听写模块样式 */
+        .dictation-module {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+        }
+
+        .dictation-title {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .dictation-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .slider-group, .switch-group {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .switch-group {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5px;
+        }
+
+        .slider-group label, .switch-group label {
+            font-size: 16px;
+            color: #555;
+        }
+
+        .interval-slider {
+            width: 100%;
+            height: 8px;
+            accent-color: #3498db;
+            cursor: pointer;
+        }
+
+        .interval-value {
+            font-size: 14px;
+            color: #3498db;
+            text-align: center;
+        }
+
+        /* 开关样式 */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 26px;
+        }
+
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .switch-slider {
+            background-color: #3498db;
+        }
+
+        input:checked + .switch-slider:before {
+            transform: translateX(24px);
+        }
+
+        .dictation-btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .start-btn {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .start-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .stop-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .stop-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .current-word {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            width: 100%;
+            text-align: center;
+            font-size: 18px;
+            color: #2c3e50;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 适配移动端 */
+        @media (max-width: 768px) {
+            .card-container {
+                grid-template-columns: 1fr;
+            }
+
+            .word-card {
+                padding: 20px;
+            }
+
+            .dictation-module {
+                padding: 20px;
+            }
+
+            .dictation-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+    <!-- 引入字体图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <h1>单词速记卡</h1>
+    <!-- 文件导入模块 -->
+    <div style="margin-bottom: 30px; width: 100%; max-width: 1200px; text-align: center;">
+        <input type="file" id="wordFileInput" accept=".txt" style="margin-bottom: 10px; padding: 10px;">
+        <button onclick="importWords()" style="padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px;">
+            <i class="fas fa-upload"></i> 导入单词
+        </button>
+        <div id="importStatus" style="margin-top: 10px; color: #555;"></div>
+    </div>
+    <div class="card-container">
+        <!-- Mybatis卡片 -->
+        <div class="word-card">
+            <div class="word">Mybatis</div>
+            <div class="explanation">SSM框架之一，基于ORM思想的持久层框架，专门解决Java对象和数据库表的映射问题</div>
+            <button class="audio-btn" onclick="playAudio('Mybatis')">
+                <i class="fas fa-volume-up"></i> 播放发音
+            </button>
+        </div>
+
+        <!-- Spring卡片 -->
+        <div class="word-card">
+            <div class="word">Spring</div>
+            <div class="explanation">SSM框架核心，Java开发的"春天"，核心是IoC/DI（控制反转/依赖注入），实现代码解耦</div>
+            <button class="audio-btn" onclick="playAudio('Spring')">
+                <i class="fas fa-volume-up"></i> 播放发音
+            </button>
+        </div>
+
+        <!-- Spring MVC卡片 -->
+        <div class="word-card">
+            <div class="word">Spring MVC</div>
+            <div class="explanation">SSM框架的Web层模块，基于MVC（模型-视图-控制器）架构，处理前端请求和响应</div>
+            <button class="audio-btn" onclick="playAudio('Spring MVC')">
+                <i class="fas fa-volume-up"></i> 播放发音
+            </button>
+        </div>
+
+        <!-- ORM卡片 -->
+        <div class="word-card">
+            <div class="word">ORM</div>
+            <div class="explanation">Object Relational Mapping（对象关系映射），将Java对象与数据库表建立映射关系</div>
+            <button class="audio-btn" onclick="playAudio('ORM')">
+                <i class="fas fa-volume-up"></i> 播放发音
+            </button>
+        </div>
+
+        <!-- session卡片 -->
+        <div class="word-card">
+            <div class="word">session</div>
+            <div class="explanation">会话，Mybatis中SqlSession是与数据库的一次"对话"，负责执行SQL、获取连接</div>
+            <button class="audio-btn" onclick="playAudio('session')">
+                <i class="fas fa-volume-up"></i> 播放发音
+            </button>
+        </div>
+
+        <!-- mapper卡片 -->
+        <div class="word-card">
+            <div class="word">mapper</div>
+            <div class="explanation">映射器，Mybatis核心组件，XML中的&lt;mapper&gt;标签用于编写SQL映射规则</div>
+            <button class="audio-btn" onclick="playAudio('mapper')">
+                <i class="fas fa-volume-up"></i> 播放发音
+            </button>
+        </div>
+
+        <!-- properties卡片 -->
+        <div class="word-card">
+            <div class="word">properties</div>
+            <div class="explanation">属性，Mybatis配置文件中用于加载外部属性文件（如db.properties），存储配置信息</div>
+            <button class="audio-btn" onclick="playAudio('properties')">
+                <i class="fas fa-volume-up"></i> 播放发音
+            </button>
+        </div>
+
+        <!-- settings卡片 -->
+        <div class="word-card">
+            <div class="word">settings</div>
+            <div class="explanation">设置，Mybatis全局配置项（如日志、缓存），对应配置文件中的&lt;settings&gt;标签</div>
+            <button class="audio-btn" onclick="playAudio('settings')">
+                <i class="fas fa-volume-up"></i> 播放发音
+            </button>
+        </div>
+
+        <!-- alias卡片 -->
+        <div class="word-card">
+            <div class="word">alias</div>
+            <div class="explanation">别名，Mybatis中为实体类设置简称，避免编写全类名，简化SQL编写</div>
+            <button class="audio-btn" onclick="playAudio('alias')">
+                <i class="fas fa-volume-up"></i> 播放发音
+            </button>
+        </div>
+
+        <!-- dataSource卡片 -->
+        <div class="word-card">
+            <div class="word">dataSource</div>
+            <div class="explanation">数据源，数据库连接的"源头"，Mybatis通过它获取数据库连接</div>
+            <button class="audio-btn" onclick="playAudio('dataSource')">
+                <i class="fas fa-volume-up"></i> 播放发音
+            </button>
+        </div>
+
+        <!-- pool卡片 -->
+        <div class="word-card">
+            <div class="word">pool</div>
+            <div class="explanation">池，通常指连接池（connection pool），管理数据库连接，避免频繁创建/销毁连接</div>
+            <button class="audio-btn" onclick="playAudio('pool')">
+                <i class="fas fa-volume-up"></i> 播放发音
+            </button>
+        </div>
+    </div>
+
+    <!-- 听写模块 -->
+    <div class="dictation-module">
+        <div class="dictation-title">📝 单词听写训练</div>
+        <div class="dictation-controls">
+            <div class="slider-group">
+                <label for="intervalSlider">听写间隔时间（秒）：</label>
+                <input type="range" id="intervalSlider" class="interval-slider" min="3" max="20" value="5">
+                <div class="interval-value">当前间隔：<span id="intervalValue">5</span> 秒</div>
+            </div>
+
+            <!-- 是否朗读解释的开关 -->
+            <div class="switch-group">
+                <label for="readExplanationSwitch">是否朗读单词解释：</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="readExplanationSwitch" checked>
+                    <span class="switch-slider"></span>
+                </label>
+            </div>
+
+            <button id="dictationBtn" class="dictation-btn start-btn" onclick="toggleDictation()">
+                <i class="fas fa-play"></i> 开始听写
+            </button>
+            <div class="current-word" id="currentWord">
+                点击「开始听写」按钮，开始随机听写训练（无重复）
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 单词数据列表（和卡片对应）
+        const wordList = [
+            { word: "Mybatis", explanation: "SSM框架之一，基于ORM思想的持久层框架，专门解决Java对象和数据库表的映射问题" },
+            { word: "Spring", explanation: "SSM框架核心，Java开发的春天，核心是IoC/DI（控制反转/依赖注入），实现代码解耦" },
+            { word: "Spring MVC", explanation: "SSM框架的Web层模块，基于MVC（模型-视图-控制器）架构，处理前端请求和响应" },
+            { word: "ORM", explanation: "Object Relational Mapping（对象关系映射），将Java对象与数据库表建立映射关系" },
+            { word: "session", explanation: "会话，Mybatis中SqlSession是与数据库的一次对话，负责执行SQL、获取连接" },
+            { word: "mapper", explanation: "映射器，Mybatis核心组件，XML中的<mapper>标签用于编写SQL映射规则" },
+            { word: "properties", explanation: "属性，Mybatis配置文件中用于加载外部属性文件（如db.properties），存储配置信息" },
+            { word: "settings", explanation: "设置，Mybatis全局配置项（如日志、缓存），对应配置文件中的<settings>标签" },
+            { word: "alias", explanation: "别名，Mybatis中为实体类设置简称，避免编写全类名，简化SQL编写" },
+            { word: "dataSource", explanation: "数据源，数据库连接的源头，Mybatis通过它获取数据库连接" },
+            { word: "pool", explanation: "池，通常指连接池（connection pool），管理数据库连接，避免频繁创建/销毁连接" }
+        ];
+
+        // 全局变量
+        let dictationTimer = null; // 听写定时器
+        let isDictating = false;   // 是否正在听写
+        let intervalSeconds = 5;   // 默认间隔5秒
+        let readExplanation = true; // 是否朗读解释，默认开启
+        let remainingWords = [];   // 待听写的单词列表（避免重复）
+
+        // 播放单词发音（基础功能）
+        function playAudio(content) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(content);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            utterance.volume = 1;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // 播放单词（可选播放解释）
+        function playWordWithOptionalExplanation(wordItem) {
+            // 先播放单词（英文）
+            const wordUtterance = new SpeechSynthesisUtterance(wordItem.word);
+            wordUtterance.lang = 'en-US';
+            wordUtterance.rate = 0.8;
+            wordUtterance.volume = 1;
+            
+            // 如果开启了朗读解释，单词播放完后播放解释（中文）
+            if (readExplanation) {
+                wordUtterance.onend = function() {
+                    setTimeout(() => {
+                        const expUtterance = new SpeechSynthesisUtterance(wordItem.explanation);
+                        expUtterance.lang = 'zh-CN';
+                        expUtterance.rate = 1;
+                        expUtterance.volume = 1;
+                        window.speechSynthesis.speak(expUtterance);
+                    }, 500); // 单词读完后停顿0.5秒再读解释
+                };
+            }
+            
+            window.speechSynthesis.speak(wordUtterance);
+        }
+
+        // 初始化待听写单词列表（打乱顺序）
+        function initRemainingWords() {
+            // 深拷贝原单词列表，避免修改原数据
+            remainingWords = JSON.parse(JSON.stringify(wordList));
+            // 打乱数组顺序（洗牌算法）
+            for (let i = remainingWords.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [remainingWords[i], remainingWords[j]] = [remainingWords[j], remainingWords[i]];
+            }
+        }
+
+        // 获取下一个未听写的单词（无重复）
+        function getNextWord() {
+            // 如果待听写列表为空，重新初始化（新一轮）
+            if (remainingWords.length === 0) {
+                initRemainingWords();
+                return { 
+                    word: "本轮听写完成！", 
+                    explanation: "即将开始新一轮无重复听写..." 
+                };
+            }
+            // 从待听写列表末尾取出一个单词（避免重复）
+            return remainingWords.pop();
+        }
+
+        // 执行一次听写
+        function doDictation() {
+            const nextWord = getNextWord();
+            // 更新当前显示的单词
+            document.getElementById('currentWord').textContent = `当前听写：${nextWord.word} - ${nextWord.explanation}`;
+            
+            // 只有不是"本轮完成"的提示，才播放语音
+            if (nextWord.word !== "本轮听写完成！") {
+                playWordWithOptionalExplanation(nextWord);
+            }
+        }
+
+        // 切换听写状态（开始/停止）
+        function toggleDictation() {
+            const btn = document.getElementById('dictationBtn');
+            const currentWordEl = document.getElementById('currentWord');
+            
+            if (!isDictating) {
+                // 开始听写：初始化待听写列表
+                initRemainingWords();
+                isDictating = true;
+                btn.className = 'dictation-btn stop-btn';
+                btn.innerHTML = '<i class="fas fa-stop"></i> 停止听写';
+                currentWordEl.textContent = '听写训练开始...（无重复朗读）';
+                
+                // 立即执行一次，然后按间隔循环
+                doDictation();
+                dictationTimer = setInterval(doDictation, intervalSeconds * 1000);
+            } else {
+                // 停止听写：重置状态
+                isDictating = false;
+                clearInterval(dictationTimer);
+                window.speechSynthesis.cancel(); // 停止语音播放
+                remainingWords = []; // 清空待听写列表
+                btn.className = 'dictation-btn start-btn';
+                btn.innerHTML = '<i class="fas fa-play"></i> 开始听写';
+                currentWordEl.textContent = '听写已停止，点击「开始听写」重新开始（无重复）';
+            }
+        }
+
+        // 监听滑块变化，更新间隔时间
+        document.getElementById('intervalSlider').addEventListener('input', function() {
+            intervalSeconds = parseInt(this.value);
+            document.getElementById('intervalValue').textContent = intervalSeconds;
+            
+            // 如果正在听写，更新定时器
+            if (isDictating) {
+                clearInterval(dictationTimer);
+                dictationTimer = setInterval(doDictation, intervalSeconds * 1000);
+            }
+        });
+
+        // 监听开关变化，更新是否朗读解释的状态
+        document.getElementById('readExplanationSwitch').addEventListener('change', function() {
+            readExplanation = this.checked;
+        });
+
+        // 导入单词函数
+        function importWords() {
+            const fileInput = document.getElementById('wordFileInput');
+            const statusDiv = document.getElementById('importStatus');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                statusDiv.textContent = '请先选择一个文本文件';
+                statusDiv.style.color = '#e74c3c';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    const lines = content.split('\n');
+                    const importedWords = [];
+                    
+                    // 解析每行内容
+                    for (const line of lines) {
+                        if (line.trim() === '') continue;
+                        
+                        // 按制表符分割单词和解释
+                        const parts = line.split('\t').filter(part => part.trim() !== '');
+                        if (parts.length >= 2) {
+                            const word = parts[0].trim();
+                            const explanation = parts.slice(1).join(' ').trim();
+                            importedWords.push({ word, explanation });
+                        }
+                    }
+                    
+                    if (importedWords.length === 0) {
+                        statusDiv.textContent = '文件中未找到有效的单词数据';
+                        statusDiv.style.color = '#e74c3c';
+                        return;
+                    }
+                    
+                    // 清空现有单词列表
+                    wordList.length = 0;
+                    // 添加导入的单词到单词列表
+                    wordList.push(...importedWords);
+                    
+                    // 清空并更新页面上的单词卡片
+                    updateWordCards();
+                    
+                    statusDiv.textContent = `成功导入 ${importedWords.length} 个单词`;
+                    statusDiv.style.color = '#27ae60';
+                    
+                } catch (error) {
+                    statusDiv.textContent = '导入失败：' + error.message;
+                    statusDiv.style.color = '#e74c3c';
+                }
+            };
+            
+            reader.onerror = function() {
+                statusDiv.textContent = '文件读取失败';
+                statusDiv.style.color = '#e74c3c';
+            };
+            
+            reader.readAsText(file, 'utf-8');
+        }
+
+        // 更新单词卡片
+        function updateWordCards() {
+            const cardContainer = document.querySelector('.card-container');
+            
+            // 清空现有卡片
+            cardContainer.innerHTML = '';
+            
+            // 为所有单词创建卡片
+            for (const wordItem of wordList) {
+                const card = document.createElement('div');
+                card.className = 'word-card';
+                card.innerHTML = `
+                    <div class="word">${wordItem.word}</div>
+                    <div class="explanation">${wordItem.explanation}</div>
+                    <button class="audio-btn" onclick="playAudio('${wordItem.word}')">
+                        <i class="fas fa-volume-up"></i> 播放发音
+                    </button>
+                `;
+                cardContainer.appendChild(card);
+            }
+        }
+    </script>
+</body>
+</html>
