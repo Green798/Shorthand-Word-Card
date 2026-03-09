@@ -419,6 +419,15 @@
         let readExplanation = true; // 是否朗读解释，默认开启
         let remainingWords = [];   // 待听写的单词列表（避免重复）
 
+        // 创建音频上下文和增益节点来增强音量
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const gainNode = audioContext.createGain();
+        gainNode.connect(audioContext.destination);
+        
+        // 设置增益值（1.0是正常音量，2.0是两倍音量）
+        const VOLUME_BOOST = 2.0;
+        gainNode.gain.value = VOLUME_BOOST;
+
         // 播放单词发音（基础功能）
         function playAudio(content) {
             window.speechSynthesis.cancel();
@@ -426,6 +435,7 @@
             utterance.lang = 'en-US';
             utterance.rate = 0.9;
             utterance.volume = 1;
+            utterance.pitch = 1.1; // 稍微提高音调，让声音更清晰
             window.speechSynthesis.speak(utterance);
         }
 
@@ -436,6 +446,7 @@
             wordUtterance.lang = 'en-US';
             wordUtterance.rate = 0.8;
             wordUtterance.volume = 1;
+            wordUtterance.pitch = 1.1; // 稍微提高音调，让声音更清晰
             
             // 如果开启了朗读解释，单词播放完后播放解释（中文）
             if (readExplanation) {
@@ -445,6 +456,7 @@
                         expUtterance.lang = 'zh-CN';
                         expUtterance.rate = 1;
                         expUtterance.volume = 1;
+                        expUtterance.pitch = 1.1;
                         window.speechSynthesis.speak(expUtterance);
                     }, 500); // 单词读完后停顿0.5秒再读解释
                 };
