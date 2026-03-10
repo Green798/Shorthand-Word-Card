@@ -267,6 +267,13 @@
         </button>
         <div id="importStatus" style="margin-top: 10px; color: #555;"></div>
     </div>
+    
+    <!-- 音量控制模块 -->
+    <div style="margin-bottom: 30px; width: 100%; max-width: 600px; text-align: center;">
+        <label for="volumeSlider" style="margin-right: 10px; font-size: 16px; color: #555;">音量：</label>
+        <input type="range" id="volumeSlider" min="0.1" max="5" step="0.1" value="2" style="width: 200px; vertical-align: middle;">
+        <span id="volumeValue" style="margin-left: 10px; font-size: 14px; color: #3498db;">2.0x</span>
+    </div>
     <div class="card-container">
         <!-- Mybatis卡片 -->
         <div class="word-card">
@@ -419,23 +426,23 @@
         let readExplanation = true; // 是否朗读解释，默认开启
         let remainingWords = [];   // 待听写的单词列表（避免重复）
 
-        // 创建音频上下文和增益节点来增强音量
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const gainNode = audioContext.createGain();
-        gainNode.connect(audioContext.destination);
+        // 全局音量控制
+        let currentVolume = 2.0; // 默认2倍音量
         
-        // 设置增益值（1.0是正常音量，2.0是两倍音量）
-        const VOLUME_BOOST = 2.0;
-        gainNode.gain.value = VOLUME_BOOST;
-
         // 播放单词发音（基础功能）
         function playAudio(content) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(content);
             utterance.lang = 'en-US';
             utterance.rate = 0.9;
-            utterance.volume = 1;
+            utterance.volume = currentVolume;
             utterance.pitch = 1.1; // 稍微提高音调，让声音更清晰
+            // 尝试使用更好的语音合成器
+            const voices = window.speechSynthesis.getVoices();
+            const englishVoice = voices.find(voice => voice.lang === 'en-US' && voice.name.includes('Microsoft'));
+            if (englishVoice) {
+                utterance.voice = englishVoice;
+            }
             window.speechSynthesis.speak(utterance);
         }
 
@@ -445,8 +452,15 @@
             const wordUtterance = new SpeechSynthesisUtterance(wordItem.word);
             wordUtterance.lang = 'en-US';
             wordUtterance.rate = 0.8;
-            wordUtterance.volume = 1;
+            wordUtterance.volume = currentVolume;
             wordUtterance.pitch = 1.1; // 稍微提高音调，让声音更清晰
+            
+            // 尝试使用更好的语音合成器
+            const voices = window.speechSynthesis.getVoices();
+            const englishVoice = voices.find(voice => voice.lang === 'en-US' && voice.name.includes('Microsoft'));
+            if (englishVoice) {
+                wordUtterance.voice = englishVoice;
+            }
             
             // 如果开启了朗读解释，单词播放完后播放解释（中文）
             if (readExplanation) {
@@ -455,8 +469,15 @@
                         const expUtterance = new SpeechSynthesisUtterance(wordItem.explanation);
                         expUtterance.lang = 'zh-CN';
                         expUtterance.rate = 1;
-                        expUtterance.volume = 1;
+                        expUtterance.volume = currentVolume;
                         expUtterance.pitch = 1.1;
+                        
+                        // 尝试使用更好的中文语音合成器
+                        const chineseVoice = voices.find(voice => voice.lang === 'zh-CN' && voice.name.includes('Microsoft'));
+                        if (chineseVoice) {
+                            expUtterance.voice = chineseVoice;
+                        }
+                        
                         window.speechSynthesis.speak(expUtterance);
                     }, 500); // 单词读完后停顿0.5秒再读解释
                 };
@@ -464,6 +485,36 @@
             
             window.speechSynthesis.speak(wordUtterance);
         }
+
+        // 初始化语音合成器
+        function initSpeechSynthesis() {
+            // 确保语音合成器已加载
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = function() {
+                    console.log('语音合成器已加载:', window.speechSynthesis.getVoices().length, '个语音可用');
+                };
+            }
+        }
+
+        // 初始化音量控制
+        function initVolumeControl() {
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeValue = document.getElementById('volumeValue');
+            
+            volumeSlider.addEventListener('input', function() {
+                currentVolume = parseFloat(this.value);
+                volumeValue.textContent = currentVolume.toFixed(1) + 'x';
+            });
+        }
+
+        // 初始化函数
+        function init() {
+            initSpeechSynthesis();
+            initVolumeControl();
+        }
+
+        // 页面加载完成后初始化
+        window.onload = init;
 
         // 初始化待听写单词列表（打乱顺序）
         function initRemainingWords() {
