@@ -447,7 +447,7 @@
         }
 
         // 播放单词（可选播放解释）
-        function playWordWithOptionalExplanation(wordItem) {
+        function playWordWithOptionalExplanation(wordItem, onComplete) {
             // 先播放单词（英文）
             const wordUtterance = new SpeechSynthesisUtterance(wordItem.word);
             wordUtterance.lang = 'en-US';
@@ -478,8 +478,22 @@
                             expUtterance.voice = chineseVoice;
                         }
                         
+                        // 解释播放完成后调用回调
+                        expUtterance.onend = function() {
+                            if (onComplete) {
+                                onComplete();
+                            }
+                        };
+                        
                         window.speechSynthesis.speak(expUtterance);
                     }, 500); // 单词读完后停顿0.5秒再读解释
+                };
+            } else {
+                // 不朗读解释时，单词播放完成后直接调用回调
+                wordUtterance.onend = function() {
+                    if (onComplete) {
+                        onComplete();
+                    }
                 };
             }
             
@@ -543,13 +557,25 @@
 
         // 执行一次听写
         function doDictation() {
+            if (!isDictating) return;
+            
             const nextWord = getNextWord();
             // 更新当前显示的单词
             document.getElementById('currentWord').textContent = `当前听写：${nextWord.word} - ${nextWord.explanation}`;
             
             // 只有不是"本轮完成"的提示，才播放语音
             if (nextWord.word !== "本轮听写完成！") {
-                playWordWithOptionalExplanation(nextWord);
+                playWordWithOptionalExplanation(nextWord, function() {
+                    // 语音播放完成后，等待指定间隔时间再播放下一个
+                    if (isDictating) {
+                        setTimeout(doDictation, intervalSeconds * 1000);
+                    }
+                });
+            } else {
+                // 本轮完成后，等待指定间隔时间再开始下一轮
+                if (isDictating) {
+                    setTimeout(doDictation, intervalSeconds * 1000);
+                }
             }
         }
 
@@ -566,13 +592,11 @@
                 btn.innerHTML = '<i class="fas fa-stop"></i> 停止听写';
                 currentWordEl.textContent = '听写训练开始...（无重复朗读）';
                 
-                // 立即执行一次，然后按间隔循环
+                // 立即执行一次，后续由回调函数处理
                 doDictation();
-                dictationTimer = setInterval(doDictation, intervalSeconds * 1000);
             } else {
                 // 停止听写：重置状态
                 isDictating = false;
-                clearInterval(dictationTimer);
                 window.speechSynthesis.cancel(); // 停止语音播放
                 remainingWords = []; // 清空待听写列表
                 btn.className = 'dictation-btn start-btn';
@@ -585,12 +609,6 @@
         document.getElementById('intervalSlider').addEventListener('input', function() {
             intervalSeconds = parseInt(this.value);
             document.getElementById('intervalValue').textContent = intervalSeconds;
-            
-            // 如果正在听写，更新定时器
-            if (isDictating) {
-                clearInterval(dictationTimer);
-                dictationTimer = setInterval(doDictation, intervalSeconds * 1000);
-            }
         });
 
         // 监听开关变化，更新是否朗读解释的状态
