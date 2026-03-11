@@ -420,11 +420,12 @@
         ];
 
         // 全局变量
-        let dictationTimer = null; // 听写定时器
         let isDictating = false;   // 是否正在听写
         let intervalSeconds = 5;   // 默认间隔5秒
         let readExplanation = true; // 是否朗读解释，默认开启
         let remainingWords = [];   // 待听写的单词列表（避免重复）
+        let totalWords = 0;        // 总单词数
+        let currentIndex = 0;      // 当前单词索引
 
         // 全局音量控制
         let currentVolume = 2.0; // 默认2倍音量
@@ -534,6 +535,10 @@
         function initRemainingWords() {
             // 深拷贝原单词列表，避免修改原数据
             remainingWords = JSON.parse(JSON.stringify(wordList));
+            // 记录总单词数
+            totalWords = remainingWords.length;
+            // 重置当前索引
+            currentIndex = 0;
             // 打乱数组顺序（洗牌算法）
             for (let i = remainingWords.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -552,6 +557,7 @@
                 };
             }
             // 从待听写列表末尾取出一个单词（避免重复）
+            currentIndex++;
             return remainingWords.pop();
         }
 
@@ -560,8 +566,10 @@
             if (!isDictating) return;
             
             const nextWord = getNextWord();
-            // 更新当前显示的单词
-            document.getElementById('currentWord').textContent = `当前听写：${nextWord.word} - ${nextWord.explanation}`;
+            // 计算剩余单词数
+            const remainingCount = remainingWords.length;
+            // 更新当前显示的单词和进度
+            document.getElementById('currentWord').textContent = `当前听写：${nextWord.word} - ${nextWord.explanation}\n进度：${currentIndex}/${totalWords}（剩余 ${remainingCount} 个）`;
             
             // 只有不是"本轮完成"的提示，才播放语音
             if (nextWord.word !== "本轮听写完成！") {
@@ -583,6 +591,8 @@
         function toggleDictation() {
             const btn = document.getElementById('dictationBtn');
             const currentWordEl = document.getElementById('currentWord');
+            const dictationModule = document.querySelector('.dictation-module');
+            const cardContainer = document.querySelector('.card-container');
             
             if (!isDictating) {
                 // 开始听写：初始化待听写列表
@@ -591,6 +601,20 @@
                 btn.className = 'dictation-btn stop-btn';
                 btn.innerHTML = '<i class="fas fa-stop"></i> 停止听写';
                 currentWordEl.textContent = '听写训练开始...（无重复朗读）';
+                
+                // 让听写卡片撑满屏幕
+                dictationModule.style.position = 'fixed';
+                dictationModule.style.top = '0';
+                dictationModule.style.left = '0';
+                dictationModule.style.width = '100%';
+                dictationModule.style.height = '100%';
+                dictationModule.style.zIndex = '9999';
+                dictationModule.style.display = 'flex';
+                dictationModule.style.flexDirection = 'column';
+                dictationModule.style.justifyContent = 'center';
+                
+                // 隐藏单词卡片容器
+                cardContainer.style.display = 'none';
                 
                 // 立即执行一次，后续由回调函数处理
                 doDictation();
@@ -602,6 +626,20 @@
                 btn.className = 'dictation-btn start-btn';
                 btn.innerHTML = '<i class="fas fa-play"></i> 开始听写';
                 currentWordEl.textContent = '听写已停止，点击「开始听写」重新开始（无重复）';
+                
+                // 恢复听写卡片原来的样式
+                dictationModule.style.position = 'static';
+                dictationModule.style.top = 'auto';
+                dictationModule.style.left = 'auto';
+                dictationModule.style.width = '100%';
+                dictationModule.style.height = 'auto';
+                dictationModule.style.zIndex = 'auto';
+                dictationModule.style.display = 'block';
+                dictationModule.style.flexDirection = 'row';
+                dictationModule.style.justifyContent = 'flex-start';
+                
+                // 显示单词卡片容器
+                cardContainer.style.display = 'grid';
             }
         }
 
