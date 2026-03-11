@@ -93,6 +93,34 @@
             width: 100%;
             max-width: 800px;
             margin-top: 20px;
+            transition: all 0.5s ease;
+        }
+        
+        /* 听写模块全屏动画 */
+        .dictation-module.fullscreen {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            width: 90%;
+            max-width: 900px;
+            height: 80%;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            animation: growIn 0.5s ease forwards;
+        }
+        
+        @keyframes growIn {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
         }
 
         .dictation-title {
@@ -602,16 +630,8 @@
                 btn.innerHTML = '<i class="fas fa-stop"></i> 停止听写';
                 currentWordEl.textContent = '听写训练开始...（无重复朗读）';
                 
-                // 让听写卡片撑满屏幕
-                dictationModule.style.position = 'fixed';
-                dictationModule.style.top = '0';
-                dictationModule.style.left = '0';
-                dictationModule.style.width = '100%';
-                dictationModule.style.height = '100%';
-                dictationModule.style.zIndex = '9999';
-                dictationModule.style.display = 'flex';
-                dictationModule.style.flexDirection = 'column';
-                dictationModule.style.justifyContent = 'center';
+                // 添加全屏类来触发动画
+                dictationModule.classList.add('fullscreen');
                 
                 // 隐藏单词卡片容器
                 cardContainer.style.display = 'none';
@@ -627,16 +647,8 @@
                 btn.innerHTML = '<i class="fas fa-play"></i> 开始听写';
                 currentWordEl.textContent = '听写已停止，点击「开始听写」重新开始（无重复）';
                 
-                // 恢复听写卡片原来的样式
-                dictationModule.style.position = 'static';
-                dictationModule.style.top = 'auto';
-                dictationModule.style.left = 'auto';
-                dictationModule.style.width = '100%';
-                dictationModule.style.height = 'auto';
-                dictationModule.style.zIndex = 'auto';
-                dictationModule.style.display = 'block';
-                dictationModule.style.flexDirection = 'row';
-                dictationModule.style.justifyContent = 'flex-start';
+                // 移除全屏类，恢复原来的样式
+                dictationModule.classList.remove('fullscreen');
                 
                 // 显示单词卡片容器
                 cardContainer.style.display = 'grid';
