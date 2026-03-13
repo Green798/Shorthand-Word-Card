@@ -314,6 +314,14 @@
         <button id="nextWordBtn" class="dictation-btn" onclick="navigateWord(1)" style="width: 120px; padding: 12px; font-size: 14px;">
             <i class="fas fa-forward"></i> 下一个
         </button>
+        <!-- 朗读解释开关 -->
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background-color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+            <label style="font-size: 14px; white-space: nowrap;">朗读解释：</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="readExplanationToggle" checked onchange="toggleReadExplanation(this.checked)">
+                <span class="switch-slider"></span>
+            </label>
+        </div>
     </div>
     
     <div class="card-container">
@@ -588,9 +596,22 @@
         // 播放当前单词
         function playCurrentWord() {
             if (wordList.length > 0 && currentWordIndex >= 0 && currentWordIndex < wordList.length) {
-                const currentWord = wordList[currentWordIndex].word;
-                playAudio(currentWord);
+                const currentWordItem = wordList[currentWordIndex];
+                // 如果开启了朗读解释，使用带解释的播放函数
+                if (readExplanation) {
+                    playWordWithOptionalExplanation(currentWordItem, function() {
+                        // 播放完成后的回调
+                    });
+                } else {
+                    // 否则只播放单词
+                    playAudio(currentWordItem.word);
+                }
             }
+        }
+
+        // 切换是否朗读解释
+        function toggleReadExplanation(checked) {
+            readExplanation = checked;
         }
 
         // 高亮当前单词卡片
