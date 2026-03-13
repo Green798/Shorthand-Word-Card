@@ -304,14 +304,14 @@
     </div>
     
     <!-- 单词控制按钮 -->
-    <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
-        <button id="prevWordBtn" class="dictation-btn" onclick="navigateWord(-1)">
+    <div style="position: fixed; left: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 999;">
+        <button id="prevWordBtn" class="dictation-btn" onclick="navigateWord(-1)" style="width: 120px; padding: 12px; font-size: 14px;">
             <i class="fas fa-backward"></i> 上一个
         </button>
-        <button id="playCurrentBtn" class="dictation-btn start-btn" onclick="playCurrentWord()">
+        <button id="playCurrentBtn" class="dictation-btn start-btn" onclick="playCurrentWord()" style="width: 120px; padding: 12px; font-size: 14px;">
             <i class="fas fa-play"></i> 播放当前
         </button>
-        <button id="nextWordBtn" class="dictation-btn" onclick="navigateWord(1)">
+        <button id="nextWordBtn" class="dictation-btn" onclick="navigateWord(1)" style="width: 120px; padding: 12px; font-size: 14px;">
             <i class="fas fa-forward"></i> 下一个
         </button>
     </div>
