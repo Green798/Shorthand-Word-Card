@@ -314,6 +314,10 @@
         <button id="nextWordBtn" class="dictation-btn" onclick="navigateWord(1)" style="width: 120px; padding: 12px; font-size: 14px;">
             <i class="fas fa-forward"></i> 下一个
         </button>
+        <!-- 全屏按钮 -->
+        <button id="fullscreenBtn" class="dictation-btn" onclick="toggleFullscreen()" style="width: 120px; padding: 12px; font-size: 14px;">
+            <i class="fas fa-expand"></i> 全屏
+        </button>
         <!-- 朗读解释开关 -->
         <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background-color: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
             <label style="font-size: 14px; white-space: nowrap;">朗读解释：</label>
@@ -612,6 +616,32 @@
         // 切换是否朗读解释
         function toggleReadExplanation(checked) {
             readExplanation = checked;
+        }
+
+        // 切换全屏模式
+        function toggleFullscreen() {
+            const elem = document.documentElement;
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i> 退出全屏';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i> 全屏';
+            }
         }
 
         // 高亮当前单词卡片
